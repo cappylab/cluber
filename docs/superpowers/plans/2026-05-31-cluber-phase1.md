@@ -113,11 +113,41 @@ npx vercel deploy
 ```
 Expected: deployment URL; visit `/` (Next page renders) and `/api/ping` → `{"ok":true,"has_db_url":true}`. **This proves the hybrid works.**
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Prove shared-module imports on Vercel (spike — BLOCKS Tasks 5–8)**
 
+`conftest.py` only fixes imports for local pytest; deployed functions don't have it, and nested functions can't `from _lib...`. **Canonical fix (do NOT improvise):** every file in `api/` except `_lib`/`_domain` begins with this depth-independent bootstrap:
+
+```python
+import os, sys
+_p = os.path.dirname(os.path.abspath(__file__))
+while not os.path.isdir(os.path.join(_p, "_lib")) and _p != os.path.dirname(_p):
+    _p = os.path.dirname(_p)
+sys.path.insert(0, _p)
+```
+
+Spike it now (nested route mirrors real depth): create `api/_lib/hello.py` → `def msg(): return "import-ok"`; create `api/members/importcheck.py`:
+```python
+from http.server import BaseHTTPRequestHandler
+import os, sys
+_p = os.path.dirname(os.path.abspath(__file__))
+while not os.path.isdir(os.path.join(_p, "_lib")) and _p != os.path.dirname(_p):
+    _p = os.path.dirname(_p)
+sys.path.insert(0, _p)
+from _lib.hello import msg
+
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200); self.end_headers(); self.wfile.write(msg().encode())
+```
+Run: `npx vercel deploy` then `curl .../api/members/importcheck`
+Expected: `import-ok`. If it fails, fix the bootstrap HERE before any Task 5–8 code. Then delete `importcheck.py` (keep `_lib/hello.py` or remove). **All Task 7–8 functions start with this bootstrap.**
+
+- [ ] **Step 7: .gitignore secrets + commit**
+
+Verify `.gitignore` includes `.env*.local` and `.vercel` (create-next-app adds them — confirm before `git add -A` to avoid committing `DATABASE_URL`/`JWT_SECRET`).
 ```bash
 git add -A
-git commit -m "chore: deploy skeleton (Next.js + /api/ping.py + Neon env) on Vercel"
+git commit -m "chore: deploy skeleton (Next + /api/ping + Neon) + verified shared imports"
 ```
 
 ---
@@ -697,6 +727,8 @@ git commit -m "feat(auth): bcrypt + JWT cookie helpers (TDD) + local admin seed 
 
 ## Task 7: API — helpers + login/logout + members collection
 
+> **MANDATORY:** every `api/*.py` function below begins with the import bootstrap from Task 1 Step 6 (prepend verbatim above `from http.server...`). Shown once there; omitted below for brevity but required.
+
 **Files:**
 - Create: `api/_lib/api.py`, `api/login.py`, `api/logout.py`, `api/members/index.py`
 
@@ -826,12 +858,15 @@ git commit -m "feat(api): helpers + login/logout + members collection (list/sear
 
 ## Task 8: API — member item + pay + stats + ranking
 
+> **MANDATORY:** prepend the Task 1 Step 6 import bootstrap to every function below.
+> **Structure fix:** use `api/members/[name]/index.py` for PATCH/DELETE (a file `[name].py` and folder `[name]/` at the same level confuse the builder). `_name()` = last path segment still resolves `<name>`.
+
 **Files:**
-- Create: `api/members/[name].py`, `api/members/[name]/pay.py`, `api/stats.py`, `api/ranking.py`
+- Create: `api/members/[name]/index.py`, `api/members/[name]/pay.py`, `api/stats.py`, `api/ranking.py`
 
 - [ ] **Step 1: Member item (PATCH partial, DELETE)**
 
-Create `api/members/[name].py`:
+Create `api/members/[name]/index.py`:
 ```python
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, unquote
@@ -915,6 +950,7 @@ class handler(BaseHTTPRequestHandler):
             "count": len(club.members),
             "total_fee": club.total_fee(),
             "average_fee": round(club.average_fee()),
+            "unpaid": sum(1 for m in club.members.values() if not m.paid),
             "roles": club.count_by_role(),
         })
 ```
@@ -1109,7 +1145,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Users, Wallet, ChartColumn, Clock, Search, Plus, CreditCard, Pencil, Trash2, LogOut, Trophy } from "lucide-react";
 import { api, type Member } from "./api";
 
-type Stats = { count: number; total_fee: number; average_fee: number; roles: Record<string, number> };
+type Stats = { count: number; total_fee: number; average_fee: number; unpaid: number; roles: Record<string, number> };
 const won = (n: number) => n.toLocaleString("ko-KR") + "원";
 
 export default function Dashboard() {
@@ -1150,7 +1186,7 @@ export default function Dashboard() {
     { I: Users, g: "from-violet-400 to-violet-600", l: "전체 회원", v: `${stats.count}명` },
     { I: Wallet, g: "from-pink-400 to-pink-600", l: "총 회비", v: won(stats.total_fee) },
     { I: ChartColumn, g: "from-sky-400 to-sky-600", l: "평균 회비", v: won(stats.average_fee) },
-    { I: Clock, g: "from-amber-300 to-amber-500", l: "미납 회원", v: `${stats.count - members.filter(m => m.paid).length}명` },
+    { I: Clock, g: "from-amber-300 to-amber-500", l: "미납 회원", v: `${stats.unpaid}명` },
   ] : [];
 
   return (
@@ -1167,7 +1203,7 @@ export default function Dashboard() {
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
         {orbs.map(({ I, g, l, v }) => (
           <div key={l} className="clay-card p-5">
-            <div className="well w-[62px] h-[62px] mb-3"><div className={`orb w-11 h-11 bg-gradient-to-br ${g}`}><I size={22} /></div></div>
+            <div className="well w-[62px] h-[62px] mb-3"><div className={`orb w-11 h-11 bg-linear-to-br ${g}`}><I size={22} /></div></div>
             <div className="text-[13px] text-[var(--muted)]">{l}</div>
             <div className="font-display text-2xl font-black">{v}</div>
           </div>
@@ -1300,3 +1336,8 @@ git commit -m "feat(ui): ranking page + production deploy verified"
 - **Spec coverage:** §2 architecture → Tasks 1,5,7,8. §3 domain classes → Tasks 2,3,4. §4 API/DB/Auth → Tasks 5,6,7,8. §5 UX/UI (DESIGN.md) → Tasks 9,10,11. §6 deferred (login/ranking mock→built in 9/11; clay-pressed active→Task 9 Step1; pin Pretendard→Task 9 Step2). §7 contracts: return-affected-member+upsert (Tasks 2,4,7,8); seed script (Task 6); schema manual (Task 5 Step6); `{name}` mutation (Tasks 8,10 use `encodeURIComponent`). ✓ no gaps.
 - **Placeholder scan:** every code step has full code; no TBD/TODO. ✓
 - **Type consistency:** `member_dict` shape ↔ `Member` TS type (name/phone/student_id/fee/paid/joined_date/role/position); `pay_fee`/`update_phone`/`add_member` return Member used by API upsert; `_name()` parses `{name}`/`{name}/pay`. ✓
+
+## Revision notes (from plan review)
+
+- **Verify with `vercel dev` or the deployed HTTPS URL — NOT `npm run dev`.** `next dev` does not serve Python `/api/*`. Cookie is `Secure`, so curl over plain `http://localhost` won't send it → run auth-protected checks against the deployed HTTPS URL.
+- **Deferred (MVP-acceptable):** `prompt()/confirm()/alert()` in dashboard pay/edit/delete break the Soft-Clay aesthetic → replace with a clay modal/toast in a later pass (tracked alongside login/ranking polish).
