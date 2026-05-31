@@ -98,12 +98,12 @@ POST /api/members/{name}/pay · GET /api/stats · GET /api/ranking
 
 ## 7. Contracts & open questions (chốt trước writing-plans)
 
-1. **Hợp đồng lưu (persistence).** Method mutating của domain **trả về Member bị ảnh hưởng** (`add_member` / `pay_fee` / `update_phone` → return member); API gọi `repo.upsert(member)`. `remove_member` → API gọi `repo.delete(id)`. KHÔNG re-save cả dict; **KHÔNG** nhét repo vào domain (giữ lớp tách bạch — chính là điểm khoe của môn).
+1. **Hợp đồng lưu (persistence).** Method mutating của domain **trả về Member bị ảnh hưởng** (`add_member` / `pay_fee` / `update_phone` → return member); API gọi `repo.upsert(member)`. `remove_member` → API gọi `repo.delete(name)`. KHÔNG re-save cả dict; **KHÔNG** nhét repo vào domain (giữ lớp tách bạch — chính là điểm khoe của môn).
 2. **Seed admin.** Bằng **script local chạy 1 lần** (`scripts/seed_admin.py`, dùng đúng hàm bcrypt của app) ghi vào Neon. Không mở endpoint `/api/seed`.
 3. **Schema.** `schema.sql` chạy tay 1 lần lên Neon (đủ Phase 1), chung bước với seed admin.
 
 **Pin version (plan chốt):** Next.js App Router + **Tailwind v4** (cú pháp theme khác v3 → ảnh hưởng port token từ DESIGN.md); **pin Pretendard** (bỏ `@latest`).
-**Mutation key:** path tên Hàn phải URL-encode → **PATCH/DELETE/pay dùng `{id}`** thay `{name}`; `name` chỉ để hiển thị + tìm kiếm.
+**Mutation key:** **PATCH/DELETE/pay dùng `{name}`** (frontend `encodeURIComponent`, framework tự decode — Hangul không phá path); `name` UNIQUE và Phase 1 không cho sửa `name` (chỉ sửa 연락처) → khóa ổn định, đồng bộ 100% với dict-theo-tên + domain methods theo name.
 **Rủi ro tích hợp (verify sớm):** Next.js route handlers và Python `/api/*.py` cùng trên Vercel có thể đụng route → **dựng skeleton + deploy thử ngay bước đầu plan**, đừng để cuối mới lộ.
 
 ## 8. Tiêu chí thành công (Phase 1)
