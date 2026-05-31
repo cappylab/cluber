@@ -57,13 +57,16 @@ Tests target the **pure domain** (zero infra) — that is the graded core and mu
 **Files:**
 - Create: `package.json`, `app/*` (via scaffold), `api/ping.py`, `requirements.txt`, `vercel.json`, `.gitignore`
 
-- [ ] **Step 1: Scaffold Next.js (App Router + TS + Tailwind v4) into repo root**
+- [ ] **Step 1: Scaffold Next.js via temp subdir (avoids create-next-app abort)**
 
-Run (in `cluber/`, empty dir except docs/):
-```bash
-npx create-next-app@latest . --ts --tailwind --app --eslint --src-dir=false --import-alias "@/*" --no-turbopack
+`create-next-app .` **aborts** (no prompt) when non-allowlisted files exist (`DESIGN.md`, `AGENTS.md`). Scaffold into a temp subdir, then merge up:
+```powershell
+cd "C:\Users\jeong\project\수업\2026-1\프로그래밍입문-2040\cluber"
+npx create-next-app@latest .scaffold --ts --tailwind --app --eslint --no-src-dir --import-alias "@/*" --yes
+Get-ChildItem -Force .scaffold -Exclude .git | Move-Item -Destination .
+Remove-Item -Recurse -Force .scaffold
 ```
-Expected: `app/`, `package.json`, `next.config.*`, Tailwind v4 wired. Accept overwrite prompts (keep existing `docs/`, `DESIGN.md`, `AGENTS.md`).
+Expected: `app/`, `package.json`, `next.config.*`, Tailwind v4, Next's `.gitignore` merged into repo root; cluber's `.git` and `docs/` untouched.
 
 - [ ] **Step 2: Add Python health-check function**
 
