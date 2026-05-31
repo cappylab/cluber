@@ -81,7 +81,7 @@ GET  /api/members?q= · POST /api/members
 PATCH /api/members/{name} (partial: phone?/position?...) · DELETE /api/members/{name}
 POST /api/members/{name}/pay · GET /api/stats · GET /api/ranking
 ```
-**Auth:** bcrypt(passlib) + JWT trong cookie **httpOnly + Secure + SameSite=Lax**; expiry 24h, không refresh token.
+**Auth:** bcrypt (thư viện trực tiếp; **không dùng passlib** — incompat với bcrypt 4.x) + JWT trong cookie **httpOnly + Secure + SameSite=Lax**; expiry 24h, không refresh token.
 
 ## 5. UX/UI
 

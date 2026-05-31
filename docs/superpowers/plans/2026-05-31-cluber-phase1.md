@@ -6,7 +6,7 @@
 
 **Architecture:** 4 layers (per spec): Next.js (Vercel) UI → Python serverless `/api/*.py` (thin) → Python domain classes (pure) → Repository → Postgres (Neon). Each request: verify JWT cookie → `repo.load_all()` → build `ClubManager` → call method → mutating method returns the affected `Member` → `repo.upsert(member)` / `repo.delete(name)` → JSON.
 
-**Tech Stack:** Next.js (App Router) + Tailwind v4 + TypeScript · Python 3.12 serverless (Vercel `@vercel/python`) · `psycopg` (Postgres driver), `passlib[bcrypt]`, `PyJWT` · Neon Postgres · deploy Vercel.
+**Tech Stack:** Next.js (App Router) + Tailwind v4 + TypeScript · Python 3.12 serverless (Vercel `@vercel/python`) · `psycopg` (Postgres driver), `bcrypt` (direct; passlib dropped — bcrypt 4.x incompat), `PyJWT` · Neon Postgres · deploy Vercel.
 
 **Conventions (from spec §7 contracts):** domain is pure (no DB import); mutating methods return the affected `Member`; mutation key is `{name}` (URL-encoded); admin seeded by local script; schema applied manually once.
 
@@ -89,7 +89,7 @@ class handler(BaseHTTPRequestHandler):
 Create `requirements.txt`:
 ```
 psycopg[binary]==3.2.3
-passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
 PyJWT==2.9.0
 ```
 Create `vercel.json`:
@@ -650,13 +650,13 @@ Expected: FAIL — `ModuleNotFoundError: _lib.auth`.
 ```python
 import os, datetime
 import jwt
-from passlib.hash import bcrypt
+import bcrypt
 
 JWT_ALG = "HS256"
 COOKIE = "cluber_token"
 
-def hash_password(pw): return bcrypt.hash(pw)
-def verify_password(pw, h): return bcrypt.verify(pw, h)
+def hash_password(pw): return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+def verify_password(pw, h): return bcrypt.checkpw(pw.encode(), h.encode())
 
 def issue_token(username):
     exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
