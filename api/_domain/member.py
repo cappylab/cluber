@@ -39,3 +39,18 @@ class Member:
 
     def __gt__(self, other):
         return self.fee > other.fee
+
+
+
+class Officer(Member):
+    """운영진 — 상속 + override (직책 추가)."""
+
+    def __init__(self, name, phone, student_id="", joined_date=None, position="총무"):
+        super().__init__(name, phone, student_id, joined_date)
+        self.position = position
+
+    def role(self):
+        return "운영진"
+
+    def __str__(self):
+        return f"{super().__str__()} (직책: {self.position})"
