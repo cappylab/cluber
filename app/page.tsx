@@ -454,27 +454,6 @@ export default function Dashboard() {
                 <span>목표 달성 시 클럽 활동비 리포트를 바로 확인할 수 있습니다.</span>
               </div>
             </section>
-
-            <section className="side-panel collection-panel">
-              <div className="side-title">
-                <Sparkles size={21} />
-                <h2>클럽 컬렉션</h2>
-              </div>
-              <div className="asset-grid avatar-collection">
-                {memberAnimalAvatars.map((src) => (
-                  <span className="asset-cell avatar-cell" key={src}>
-                    <Image src={src} alt="" width={58} height={58} />
-                  </span>
-                ))}
-              </div>
-              <div className="asset-grid">
-                {decorProps.map((src) => (
-                  <span className="asset-cell" key={src}>
-                    <Image src={src} alt="" width={58} height={58} />
-                  </span>
-                ))}
-              </div>
-            </section>
           </aside>
         </div>
       </div>

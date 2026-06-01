@@ -3,4 +3,4 @@ import psycopg
 
 
 def get_conn():
-    return psycopg.connect(os.environ["DATABASE_URL"])
+    return psycopg.connect(os.environ["DATABASE_URL"], connect_timeout=8)
