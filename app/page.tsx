@@ -16,6 +16,7 @@ import {
   Home,
   LogOut,
   Pencil,
+  Plus,
   Search,
   Sparkles,
   Trash2,
@@ -60,6 +61,8 @@ export default function Dashboard() {
   const [members, setMembers] = useState<Member[]>([]);
   const [q, setQ] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", student_id: "", type: "member", position: "" });
   const [paymentTarget, setPaymentTarget] = useState<Member | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("150000");
   const [editTarget, setEditTarget] = useState<Member | null>(null);
@@ -100,6 +103,16 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [router]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name || !form.phone) return;
+    const r = await api("/api/members", { method: "POST", body: JSON.stringify(form) });
+    if (r.error) return alert(r.error);
+    setForm({ name: "", phone: "", student_id: "", type: "member", position: "" });
+    setAddOpen(false);
+    load(q);
+  }
 
   async function submitPayment(e: React.FormEvent) {
     e.preventDefault();
@@ -281,7 +294,7 @@ export default function Dashboard() {
                 <h2>회원 관리</h2>
                 <p>회원을 검색하고 납부를 처리하세요.</p>
               </div>
-              <Link className="game-btn primary" href="/add"><UserPlus size={18} />회원 추가</Link>
+              <button className="game-btn primary" type="button" onClick={() => setAddOpen(true)}><UserPlus size={18} />회원 추가</button>
             </div>
 
             {loadError && (
@@ -389,6 +402,31 @@ export default function Dashboard() {
           </aside>
         </div>
       </div>
+
+      {addOpen && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="회원 추가">
+          <form className="game-modal" onSubmit={add}>
+            <h2>회원 추가</h2>
+            <p>새 회원 정보를 입력하세요.</p>
+            <div className="login-form">
+              <input className="game-input" placeholder="이름" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="이름" />
+              <input className="game-input" placeholder="연락처" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} aria-label="연락처" />
+              <input className="game-input" placeholder="학번(선택)" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })} aria-label="학번" />
+              <select className="game-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} aria-label="구분">
+                <option value="member">일반회원</option>
+                <option value="officer">운영진</option>
+              </select>
+              {form.type === "officer" && (
+                <input className="game-input" placeholder="직책" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} aria-label="직책" />
+              )}
+            </div>
+            <div className="modal-actions">
+              <button className="game-btn secondary" type="button" onClick={() => setAddOpen(false)}>취소</button>
+              <button className="game-btn primary" type="submit"><Plus size={18} />추가</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {paymentTarget && (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="회비 납부">
