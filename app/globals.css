@@ -485,7 +485,7 @@ h2,
 .floating-prop {
   position: absolute;
   z-index: 3;
-  width: 64px;
+  width: 52px;
   height: auto;
   filter: drop-shadow(0 12px 12px rgba(49, 27, 113, 0.2));
 }
@@ -501,6 +501,9 @@ h2,
   top: 38px;
   transform: rotate(9deg);
 }
+
+.prop-balloon { left: 14px; top: 16px; transform: rotate(-8deg); }
+.prop-confetti { right: 16px; bottom: 26px; transform: rotate(12deg); }
 
 .stats-grid {
   display: grid;
