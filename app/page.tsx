@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   AlertCircle,
   BadgeCheck,
-  Bell,
+  Settings,
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
@@ -234,7 +234,7 @@ export default function Dashboard() {
             <Link className="nav-pill" href="/badges"><BadgeCheck size={18} />배지</Link>
           </nav>
           <div className="player-actions">
-            <button className="round-btn" type="button" aria-label="알림"><Bell size={18} /></button>
+            <Link className="round-btn" href="/settings" aria-label="설정"><Settings size={18} /></Link>
             <button className="player-chip" type="button" onClick={logout}>
               <span className="mini-avatar avatar-violet">운</span>
               <span>운영진</span>

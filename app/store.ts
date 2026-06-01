@@ -75,3 +75,4 @@ export function saveClub(name: string, goal: number) { write(CKEY, { name: name.
 export function isAuthed(): boolean { return read<string>(AKEY, "") === "1"; }
 export function login() { write(AKEY, "1"); }
 export function logout() { if (typeof window !== "undefined") localStorage.removeItem(AKEY); }
+export function clearData() { if (typeof window !== "undefined") { localStorage.removeItem(MKEY); localStorage.removeItem(CKEY); } }

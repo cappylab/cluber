@@ -34,15 +34,6 @@ export default function Login() {
           </span>
           <span className="brand-text">Cluber</span>
         </div>
-        <Image
-          className="login-mascot"
-          src="/assets/game/cluber-mascot.png"
-          alt=""
-          width={220}
-          height={330}
-          priority
-        />
-        <h1>Cluber</h1>
         <p><Sparkles size={15} style={{ display: "inline", verticalAlign: "-2px" }} /> 동호회 관리 시스템</p>
         <form className="login-form" onSubmit={submit}>
           <input className="game-input" placeholder="아이디" value={u} onChange={(e) => setU(e.target.value)} aria-label="아이디" />
