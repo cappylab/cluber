@@ -296,7 +296,7 @@ h2,
 
 .hero-hud {
   display: grid;
-  grid-template-columns: minmax(280px, 0.85fr) minmax(340px, 1.05fr) minmax(220px, 300px);
+  grid-template-columns: minmax(300px, 1.15fr) minmax(320px, 0.92fr);
   gap: 22px;
   margin: 14px 6px 14px;
   align-items: center;
@@ -307,6 +307,23 @@ h2,
   flex-direction: column;
   justify-content: center;
   padding: 8px 4px;
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.hero-brand-mascot {
+  width: min(38%, 138px);
+  height: auto;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 18px 22px rgba(49, 27, 113, 0.34));
+}
+
+.hero-brand h1 {
+  margin: 0;
 }
 
 .quest-badge {

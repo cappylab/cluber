@@ -17,7 +17,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Sparkles,
   Trash2,
   Trophy,
   UserPlus,
@@ -25,7 +24,7 @@ import {
 } from "lucide-react";
 import { api, type Member } from "./api";
 import { isAuthed } from "./store";
-import { assetBySeed, decorProps, memberAnimalAvatars } from "./gameAssets";
+import { assetBySeed, memberAnimalAvatars } from "./gameAssets";
 
 type Stats = {
   count: number;
@@ -227,8 +226,10 @@ export default function Dashboard() {
 
         <section className="hero-hud" aria-label="Cluber dashboard summary">
           <div className="hero-copy">
-            <div className="quest-badge"><Sparkles size={16} />동호회 대시보드</div>
-            <h1>{club?.name ?? "Cluber"}</h1>
+            <div className="hero-brand">
+              <Image className="hero-brand-mascot" src="/assets/game/cluber-mascot.png" alt="" width={150} height={225} priority />
+              <h1>{club?.name ?? "Cluber"}</h1>
+            </div>
           </div>
 
           <div className="goal-card" id="fees">
@@ -247,27 +248,6 @@ export default function Dashboard() {
               <span>현재 {shortWon(stats?.total_fee ?? 0)}</span>
               <span>남은 {shortWon(Math.max(0, goal - (stats?.total_fee ?? 0)))}</span>
             </div>
-          </div>
-
-          <div className="hero-showcase" aria-hidden="true">
-            <div className="sparkle-field">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-            <Image className="floating-prop prop-rocket" src={decorProps[0]} alt="" width={76} height={76} />
-            <Image className="floating-prop prop-speaker" src={decorProps[2]} alt="" width={66} height={66} />
-            <Image className="floating-prop prop-balloon" src={decorProps[9]} alt="" width={54} height={54} />
-            <Image className="floating-prop prop-confetti" src={decorProps[12]} alt="" width={54} height={54} />
-            <Image
-              className="hero-mascot-img"
-              src="/assets/game/cluber-mascot.png"
-              alt=""
-              width={320}
-              height={480}
-              priority
-            />
           </div>
         </section>
 
