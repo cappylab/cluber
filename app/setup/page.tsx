@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Plus, Target, Users } from "lucide-react";
 import { api } from "../api";
+import { isAuthed } from "../store";
 
 const won = (n: number) => `₩${(n || 0).toLocaleString("ko-KR")}`;
 
@@ -18,6 +19,7 @@ export default function Setup() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    if (!isAuthed()) { router.replace("/login"); return; }
     api("/api/club").then((d) => { if (d?.exists) router.replace("/"); }).catch(() => {});
   }, [router]);
 

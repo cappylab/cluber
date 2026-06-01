@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LogIn, Sparkles } from "lucide-react";
+import { login, getClub } from "../store";
 
 export default function Login() {
   const [u, setU] = useState("");
@@ -11,17 +12,15 @@ export default function Login() {
   const [err, setErr] = useState("");
   const router = useRouter();
 
-  async function submit(e: React.FormEvent) {
+  function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    const res = await fetch("/api/login", {
-      method: "POST",
-      body: JSON.stringify({ username: u, password: p }),
-    });
-    if (res.ok) {
-      const c = await fetch("/api/club").then((r) => (r.ok ? r.json() : null));
-      router.push(c && c.exists ? "/" : "/setup");
-    } else setErr((await res.json()).error || "로그인 실패");
+    if (u === "admin" && p === "cluber2026") {
+      login();
+      router.push(getClub() ? "/" : "/setup");
+    } else {
+      setErr("아이디 또는 비밀번호가 올바르지 않습니다.");
+    }
   }
 
   return (

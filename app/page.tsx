@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { api, type Member } from "./api";
+import { isAuthed } from "./store";
 import { assetBySeed, decorProps, memberAnimalAvatars } from "./gameAssets";
 
 type Stats = {
@@ -88,6 +89,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    if (!isAuthed()) { router.replace("/login"); return; }
     let cancelled = false;
     Promise.all([api("/api/stats"), api("/api/members?q="), api("/api/club")]).then(([s, m, c]) => {
       if (cancelled) return;
@@ -155,7 +157,7 @@ export default function Dashboard() {
   }
 
   async function logout() {
-    await fetch("/api/logout", { method: "POST" });
+    await api("/api/logout", { method: "POST" });
     window.location.href = "/login";
   }
 
