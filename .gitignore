@@ -45,3 +45,8 @@ next-env.d.ts
 __pycache__/
 *.pyc
 .venv/
+
+
+# local dev artifacts
+test-results/
+tmp-*.log

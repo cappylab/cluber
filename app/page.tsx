@@ -1,105 +1,483 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { Users, Wallet, ChartColumn, Clock, Search, Plus, CreditCard, Pencil, Trash2, LogOut, Trophy } from "lucide-react";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  AlertCircle,
+  BadgeCheck,
+  Bell,
+  CheckCircle2,
+  ChevronRight,
+  CircleDollarSign,
+  Coins,
+  CreditCard,
+  Home,
+  LogOut,
+  Medal,
+  Pencil,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Trophy,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { api, type Member } from "./api";
 
-type Stats = { count: number; total_fee: number; average_fee: number; unpaid: number; roles: Record<string, number> };
-const won = (n: number) => n.toLocaleString("ko-KR") + "원";
+type Stats = {
+  count: number;
+  total_fee: number;
+  average_fee: number;
+  unpaid: number;
+  roles: Record<string, number>;
+};
+
+const shortWon = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
+const monthlyGoal = 4_500_000;
+
+const avatarPalettes = [
+  "avatar-coral",
+  "avatar-sky",
+  "avatar-violet",
+  "avatar-amber",
+  "avatar-mint",
+];
+
+function avatarClass(name: string) {
+  const seed = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return avatarPalettes[seed % avatarPalettes.length];
+}
+
+function firstGlyph(name: string) {
+  return Array.from(name.trim())[0] || "C";
+}
+
+function progress(now: number, goal: number) {
+  return Math.min(100, Math.round((now / goal) * 100));
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [q, setQ] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", student_id: "", type: "member", position: "" });
+  const [loadError, setLoadError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    student_id: "",
+    type: "member",
+    position: "",
+  });
+  const [paymentTarget, setPaymentTarget] = useState<Member | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("150000");
+  const [editTarget, setEditTarget] = useState<Member | null>(null);
+  const [editPhone, setEditPhone] = useState("");
 
   const load = useCallback(async (query = "") => {
-    const [s, m] = await Promise.all([api("/api/stats"), api(`/api/members?q=${encodeURIComponent(query)}`)]);
-    setStats(s); setMembers(m.members);
+    const [s, m] = await Promise.all([
+      api("/api/stats"),
+      api(`/api/members?q=${encodeURIComponent(query)}`),
+    ]);
+    if (s.error || m.error) {
+      setLoadError(s.error || m.error);
+      return;
+    }
+    setLoadError("");
+    setStats(s);
+    setMembers(m.members);
   }, []);
-  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([api("/api/stats"), api("/api/members?q=")]).then(([s, m]) => {
+      if (cancelled) return;
+      if (s.error || m.error) {
+        setLoadError(s.error || m.error);
+        return;
+      }
+      setLoadError("");
+      setStats(s);
+      setMembers(m.members);
+    }).catch((error) => {
+      if (!cancelled) setLoadError(error instanceof Error ? error.message : "API 연결 실패");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.phone) return;
-    const r = await api("/api/members", { method: "POST", body: JSON.stringify(form) });
+    const r = await api("/api/members", {
+      method: "POST",
+      body: JSON.stringify(form),
+    });
     if (r.error) return alert(r.error);
-    setForm({ name: "", phone: "", student_id: "", type: "member", position: "" }); load(q);
+    setForm({ name: "", phone: "", student_id: "", type: "member", position: "" });
+    load(q);
   }
-  async function pay(n: string) {
-    const a = prompt(`${n} 회비 납부 금액?`); if (a === null) return;
-    const r = await api(`/api/members/${encodeURIComponent(n)}/pay`, { method: "POST", body: JSON.stringify({ amount: Number(a) }) });
-    if (r.error) alert(r.error); load(q);
+
+  async function submitPayment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!paymentTarget) return;
+    const amount = Number(paymentAmount);
+    if (!Number.isFinite(amount) || amount < 0) return;
+    const r = await api(`/api/members/${encodeURIComponent(paymentTarget.name)}/pay`, {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    });
+    if (r.error) alert(r.error);
+    setPaymentTarget(null);
+    setPaymentAmount("150000");
+    load(q);
   }
-  async function edit(n: string) {
-    const p = prompt(`${n} 새 연락처?`); if (!p) return;
-    await api(`/api/members/${encodeURIComponent(n)}`, { method: "PATCH", body: JSON.stringify({ phone: p }) }); load(q);
+
+  async function submitEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTarget || !editPhone.trim()) return;
+    const r = await api(`/api/members/${encodeURIComponent(editTarget.name)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ phone: editPhone.trim() }),
+    });
+    if (r.error) alert(r.error);
+    setEditTarget(null);
+    setEditPhone("");
+    load(q);
   }
+
   async function del(n: string) {
     if (!confirm(`${n} 회원을 삭제할까요?`)) return;
-    await api(`/api/members/${encodeURIComponent(n)}`, { method: "DELETE" }); load(q);
+    await api(`/api/members/${encodeURIComponent(n)}`, { method: "DELETE" });
+    load(q);
   }
-  async function logout() { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }
 
-  const orbs = stats ? [
-    { I: Users, g: "from-violet-400 to-violet-600", l: "전체 회원", v: `${stats.count}명` },
-    { I: Wallet, g: "from-pink-400 to-pink-600", l: "총 회비", v: won(stats.total_fee) },
-    { I: ChartColumn, g: "from-sky-400 to-sky-600", l: "평균 회비", v: won(stats.average_fee) },
-    { I: Clock, g: "from-amber-300 to-amber-500", l: "미납 회원", v: `${stats.unpaid}명` },
-  ] : [];
+  async function logout() {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
+  const ranking = useMemo(
+    () => [...members].sort((a, b) => b.fee - a.fee).slice(0, 5),
+    [members],
+  );
+
+  const recentPaid = useMemo(
+    () => members.filter((m) => m.paid).slice(-5).reverse(),
+    [members],
+  );
+
+  const goalPercent = progress(stats?.total_fee ?? 0, monthlyGoal);
+  const generalCount = stats?.roles?.["일반회원"] ?? 0;
+  const officerCount = stats?.roles?.["운영진"] ?? 0;
+
+  const statCards = stats
+    ? [
+        {
+          img: "members",
+          label: "전체 회원",
+          value: `${stats.count}명`,
+          helper: `일반 ${generalCount} · 운영진 ${officerCount}`,
+          color: "violet",
+          percent: Math.min(100, stats.count),
+        },
+        {
+          img: "money",
+          label: "총 회비",
+          value: shortWon(stats.total_fee),
+          helper: "누적 납부 금액",
+          color: "pink",
+          percent: goalPercent,
+        },
+        {
+          img: "chart",
+          label: "평균 회비",
+          value: shortWon(stats.average_fee),
+          helper: "회원 1인당 평균",
+          color: "sky",
+          percent: Math.min(100, Math.round(stats.average_fee / 3000)),
+        },
+        {
+          img: "clock",
+          label: "미납 회원",
+          value: `${stats.unpaid}명`,
+          helper: "납부하지 않은 회원",
+          color: "amber",
+          percent: stats.count ? Math.round((stats.unpaid / stats.count) * 100) : 0,
+        },
+      ]
+    : [];
 
   return (
-    <main className="max-w-5xl mx-auto p-5 md:p-7">
-      <header className="clay-card flex items-center justify-between gap-4 px-5 py-3 mb-7">
-        <span className="font-display text-2xl font-black" style={{ background: "var(--grad)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Cluber</span>
-        <nav className="flex gap-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
-          <a href="/" className="px-3 py-2 rounded-xl" style={{ color: "var(--violet)", boxShadow: "var(--sh-in)" }}>대시보드</a>
-          <a href="/ranking" className="px-3 py-2 rounded-xl flex items-center gap-1"><Trophy size={16} />회비 랭킹</a>
-        </nav>
-        <button className="clay-btn px-4 py-2 flex items-center gap-2" onClick={logout}><LogOut size={18} />로그아웃</button>
-      </header>
+    <main className="game-shell">
+      <div className="game-bg" aria-hidden="true" />
+      <div className="game-vignette" aria-hidden="true" />
 
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
-        {orbs.map(({ I, g, l, v }) => (
-          <div key={l} className="clay-card p-5">
-            <div className="well w-[62px] h-[62px] mb-3"><div className={`orb w-11 h-11 bg-linear-to-br ${g}`}><I size={22} /></div></div>
-            <div className="text-[13px]" style={{ color: "var(--muted)" }}>{l}</div>
-            <div className="font-display text-2xl font-black">{v}</div>
+      <div className="game-stage">
+        <header className="game-nav">
+          <Link className="brand-lockup" href="/">
+            <span className="brand-mascot image-mark">
+              <Image src="/assets/game/cluber-logo-mark.png" alt="" width={64} height={64} priority />
+            </span>
+            <span className="brand-text">Cluber</span>
+          </Link>
+          <nav className="nav-tabs" aria-label="주요 메뉴">
+            <Link className="nav-pill active" href="/"><Home size={18} />홈</Link>
+            <a className="nav-pill" href="#members"><Users size={18} />회원</a>
+            <a className="nav-pill" href="#fees"><CreditCard size={18} />회비</a>
+            <Link className="nav-pill" href="/ranking"><Trophy size={18} />랭킹</Link>
+          </nav>
+          <div className="player-actions">
+            <button className="round-btn" type="button" aria-label="알림"><Bell size={18} /></button>
+            <button className="player-chip" type="button" onClick={logout}>
+              <span className="mini-avatar avatar-violet">운</span>
+              <span>운영진</span>
+              <LogOut size={16} />
+            </button>
           </div>
-        ))}
-      </section>
+        </header>
 
-      <form onSubmit={(e) => { e.preventDefault(); load(q); }} className="flex gap-3 mb-4">
-        <div className="clay-input flex-1 flex items-center gap-2 px-4 py-3"><Search size={18} color="var(--muted)" />
-          <input className="bg-transparent outline-none w-full" placeholder="이름 또는 연락처 검색" value={q} onChange={(e) => setQ(e.target.value)} aria-label="회원 검색" /></div>
-        <button className="clay-btn px-5">검색</button>
-      </form>
+        <section className="hero-hud" aria-label="Cluber dashboard summary">
+          <div className="hero-copy">
+            <div className="quest-badge"><Sparkles size={16} />동호회 회비 퀘스트</div>
+            <h1>Cluber</h1>
+            <p>회원 등록, 납부, 랭킹을 한 화면에서 관리하는 게임형 동호회 대시보드</p>
+          </div>
 
-      <form onSubmit={add} className="clay-card p-4 mb-5 flex flex-wrap gap-3 items-center">
-        <input className="clay-input px-3 py-2" placeholder="이름" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="이름" />
-        <input className="clay-input px-3 py-2" placeholder="연락처" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} aria-label="연락처" />
-        <input className="clay-input px-3 py-2" placeholder="학번(선택)" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })} aria-label="학번" />
-        <select className="clay-input px-3 py-2" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} aria-label="구분">
-          <option value="member">일반회원</option><option value="officer">운영진</option>
-        </select>
-        {form.type === "officer" && <input className="clay-input px-3 py-2" placeholder="직책" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} aria-label="직책" />}
-        <button className="clay-btn clay-btn-primary px-4 py-2 flex items-center gap-2" type="submit"><Plus size={18} />회원 추가</button>
-      </form>
-
-      <div className="clay-card p-3">
-        {members.map((m) => (
-          <div key={m.name} className="grid grid-cols-[1.4fr_1fr_1.2fr_auto] items-center gap-3 px-4 py-3 rounded-2xl">
-            <div><div className="font-bold">{m.name}</div><div className="text-xs" style={{ color: "var(--muted)" }}>학번 {m.student_id || "-"} · 가입 {m.joined_date}</div></div>
-            <div>{m.role === "운영진" ? <span className="badge badge-officer">운영진 · {m.position}</span> : <span className="badge badge-general">일반회원</span>}</div>
-            <div className="flex items-center gap-2"><span className="font-display font-extrabold">{won(m.fee)}</span>{m.paid ? <span className="badge badge-paid">납부</span> : <span className="badge badge-unpaid">미납</span>}</div>
-            <div className="flex gap-2">
-              <button className="icon-btn w-10 h-10" aria-label="회비 납부" onClick={() => pay(m.name)}><CreditCard size={18} /></button>
-              <button className="icon-btn w-10 h-10" aria-label="회원 수정" onClick={() => edit(m.name)}><Pencil size={18} /></button>
-              <button className="icon-btn danger w-10 h-10" aria-label="회원 삭제" onClick={() => del(m.name)}><Trash2 size={18} /></button>
+          <div className="goal-card" id="fees">
+            <div className="goal-top">
+              <span className="goal-icon"><CircleDollarSign size={24} /></span>
+              <div>
+                <span>이번 달 목표</span>
+                <strong>{shortWon(monthlyGoal)}</strong>
+              </div>
+              <b>{goalPercent}%</b>
+            </div>
+            <div className="progress-track">
+              <span style={{ width: `${goalPercent}%` }} />
+            </div>
+            <div className="goal-bottom">
+              <span>현재 {shortWon(stats?.total_fee ?? 0)}</span>
+              <span>남은 {shortWon(Math.max(0, monthlyGoal - (stats?.total_fee ?? 0)))}</span>
             </div>
           </div>
-        ))}
-        {members.length === 0 && <div className="px-4 py-6" style={{ color: "var(--muted)" }}>등록된 회원이 없습니다.</div>}
+
+          <div className="hero-showcase" aria-hidden="true">
+            <div className="sparkle-field">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <Image
+              className="hero-mascot-img"
+              src="/assets/game/cluber-mascot.png"
+              alt=""
+              width={320}
+              height={480}
+              priority
+            />
+          </div>
+        </section>
+
+        <section className="stats-grid" aria-label="클럽 통계">
+          {statCards.map(({ img, label, value, helper, color, percent }) => (
+            <article className="stat-tile" key={label}>
+              <div className={`stat-icon ${color}`}><img src={`/icons3d/${img}.png`} alt="" width={36} height={36} /></div>
+              <div className="stat-copy">
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <em>{helper}</em>
+              </div>
+              <div className="mini-progress"><span style={{ width: `${percent}%` }} /></div>
+            </article>
+          ))}
+        </section>
+
+        <div className="dashboard-grid">
+          <section className="main-panel" id="members">
+            <div className="panel-heading">
+              <div>
+                <h2>회원 관리</h2>
+                <p>검색, 신규 등록, 납부 처리까지 실제 API로 연결됩니다.</p>
+              </div>
+              <Link className="ghost-link" href="/ranking">회비 랭킹 <ChevronRight size={16} /></Link>
+            </div>
+
+            {loadError && (
+              <div className="api-banner">
+                <AlertCircle size={18} />
+                <span>API 연결 확인 필요 · {loadError}</span>
+              </div>
+            )}
+
+            <form onSubmit={(e) => { e.preventDefault(); load(q); }} className="search-rail">
+              <div className="game-input search-box">
+                <Search size={19} />
+                <input
+                  placeholder="회원 검색"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  aria-label="회원 검색"
+                />
+              </div>
+              <button className="game-btn secondary" type="submit">검색</button>
+            </form>
+
+            <form onSubmit={add} className="add-member-card">
+              <div className="add-card-title">
+                <span><UserPlus size={19} /></span>
+                <strong>회원 추가</strong>
+              </div>
+              <input className="game-input" placeholder="이름" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="이름" />
+              <input className="game-input" placeholder="연락처" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} aria-label="연락처" />
+              <input className="game-input" placeholder="학번(선택)" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })} aria-label="학번" />
+              <select className="game-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} aria-label="구분">
+                <option value="member">일반회원</option>
+                <option value="officer">운영진</option>
+              </select>
+              {form.type === "officer" && (
+                <input className="game-input" placeholder="직책" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} aria-label="직책" />
+              )}
+              <button className="game-btn primary" type="submit"><Plus size={18} />회원 추가</button>
+            </form>
+
+            <div className="member-board">
+              <div className="member-head">
+                <span>회원 정보</span>
+                <span>구분</span>
+                <span>회비</span>
+                <span>납부 상태</span>
+                <span>관리</span>
+              </div>
+              {members.map((m) => (
+                <article className="member-row" key={m.name}>
+                  <div className="member-profile">
+                    <span className={`avatar ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <div>
+                      <strong>{m.name}</strong>
+                      <small>{m.student_id || "-"} · {m.phone}</small>
+                    </div>
+                  </div>
+                  <div>
+                    {m.role === "운영진" ? (
+                      <span className="badge badge-officer">운영진 · {m.position}</span>
+                    ) : (
+                      <span className="badge badge-general">일반회원</span>
+                    )}
+                  </div>
+                  <strong className="fee-value">{shortWon(m.fee)}</strong>
+                  <div>
+                    {m.paid ? (
+                      <span className="badge badge-paid"><CheckCircle2 size={13} />납부</span>
+                    ) : (
+                      <span className="badge badge-unpaid"><AlertCircle size={13} />미납</span>
+                    )}
+                    <small className="paid-date">{m.joined_date}</small>
+                  </div>
+                  <div className="row-actions">
+                    <button className="icon-btn" type="button" aria-label="회비 납부" onClick={() => setPaymentTarget(m)}><CreditCard size={18} /></button>
+                    <button className="icon-btn" type="button" aria-label="회원 수정" onClick={() => { setEditTarget(m); setEditPhone(m.phone); }}><Pencil size={18} /></button>
+                    <button className="icon-btn danger" type="button" aria-label="회원 삭제" onClick={() => del(m.name)}><Trash2 size={18} /></button>
+                  </div>
+                </article>
+              ))}
+              {members.length === 0 && (
+                <div className="empty-state">
+                  <Users size={28} />
+                  <span>등록된 회원이 없습니다.</span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <aside className="side-stack">
+            <section className="side-panel ranking-panel">
+              <div className="side-title">
+                <Trophy size={21} />
+                <h2>회비 랭킹</h2>
+              </div>
+              <div className="rank-list">
+                {ranking.map((m, i) => (
+                  <div className="rank-row" key={m.name}>
+                    <span className={`rank-medal rank-${Math.min(i + 1, 3)}`}>
+                      {i < 3 ? <Medal size={18} /> : i + 1}
+                    </span>
+                    <span className={`avatar small ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <div>
+                      <strong>{m.name}</strong>
+                      <small>{m.role}</small>
+                    </div>
+                    <b>{shortWon(m.fee)}</b>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="side-panel">
+              <div className="side-title">
+                <Coins size={21} />
+                <h2>최근 납부</h2>
+              </div>
+              <div className="recent-list">
+                {recentPaid.length > 0 ? recentPaid.map((m) => (
+                  <div className="recent-row" key={m.name}>
+                    <span className={`avatar tiny ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <span>{m.name}</span>
+                    <b>{shortWon(m.fee)}</b>
+                  </div>
+                )) : (
+                  <div className="empty-mini">아직 납부 기록이 없습니다.</div>
+                )}
+              </div>
+            </section>
+
+            <section className="reward-card" aria-label="클럽 보상">
+              <Image
+                className="reward-art"
+                src="/assets/game/cluber-reward-trophy.png"
+                alt=""
+                width={300}
+                height={200}
+              />
+              <div>
+                <strong><BadgeCheck size={18} /> 보상 상자 진행 중</strong>
+                <span>목표 달성 시 클럽 활동비 리포트를 바로 확인할 수 있습니다.</span>
+              </div>
+            </section>
+          </aside>
+        </div>
       </div>
+
+      {paymentTarget && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="회비 납부">
+          <form className="game-modal" onSubmit={submitPayment}>
+            <h2>{paymentTarget.name} 회비 납부</h2>
+            <p>금액을 입력하면 실제 회원 회비에 누적됩니다.</p>
+            <input className="game-input" inputMode="numeric" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} aria-label="회비 납부 금액" />
+            <div className="modal-actions">
+              <button className="game-btn secondary" type="button" onClick={() => setPaymentTarget(null)}>취소</button>
+              <button className="game-btn primary" type="submit"><CreditCard size={18} />납부 저장</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {editTarget && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="회원 수정">
+          <form className="game-modal" onSubmit={submitEdit}>
+            <h2>{editTarget.name} 연락처 수정</h2>
+            <p>새 연락처를 저장하면 회원 목록이 갱신됩니다.</p>
+            <input className="game-input" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} aria-label="새 연락처" />
+            <div className="modal-actions">
+              <button className="game-btn secondary" type="button" onClick={() => setEditTarget(null)}>취소</button>
+              <button className="game-btn primary" type="submit"><Pencil size={18} />저장</button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   );
 }

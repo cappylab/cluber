@@ -1,6 +1,9 @@
 "use client";
+
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { LogIn, Sparkles } from "lucide-react";
 
 export default function Login() {
   const [u, setU] = useState("");
@@ -20,18 +23,33 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen grid place-items-center p-6">
-      <form onSubmit={submit} className="clay-card w-full max-w-sm p-8 grid gap-4">
-        <h1 className="font-display text-3xl font-black text-center"
-            style={{ background: "var(--grad)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
-          Cluber
-        </h1>
-        <p className="text-center text-sm" style={{ color: "var(--muted)" }}>동호회 관리 시스템</p>
-        <input className="clay-input px-4 py-3" placeholder="아이디" value={u} onChange={(e) => setU(e.target.value)} aria-label="아이디" />
-        <input className="clay-input px-4 py-3" type="password" placeholder="비밀번호" value={p} onChange={(e) => setP(e.target.value)} aria-label="비밀번호" />
-        {err && <p className="text-sm" style={{ color: "var(--danger)" }}>{err}</p>}
-        <button className="clay-btn clay-btn-primary px-4 py-3" type="submit">로그인</button>
-      </form>
+    <main className="login-shell">
+      <div className="game-bg" aria-hidden="true" />
+      <div className="game-vignette" aria-hidden="true" />
+      <section className="login-card">
+        <div className="brand-lockup" style={{ margin: "0 auto 12px" }}>
+          <span className="brand-mascot image-mark">
+            <Image src="/assets/game/cluber-logo-mark.png" alt="" width={64} height={64} priority />
+          </span>
+          <span className="brand-text">Cluber</span>
+        </div>
+        <Image
+          className="login-mascot"
+          src="/assets/game/cluber-mascot.png"
+          alt=""
+          width={220}
+          height={330}
+          priority
+        />
+        <h1>Cluber</h1>
+        <p><Sparkles size={15} style={{ display: "inline", verticalAlign: "-2px" }} /> 동호회 관리 시스템</p>
+        <form className="login-form" onSubmit={submit}>
+          <input className="game-input" placeholder="아이디" value={u} onChange={(e) => setU(e.target.value)} aria-label="아이디" />
+          <input className="game-input" type="password" placeholder="비밀번호" value={p} onChange={(e) => setP(e.target.value)} aria-label="비밀번호" />
+          {err && <p className="login-error">{err}</p>}
+          <button className="game-btn primary" type="submit"><LogIn size={18} />로그인</button>
+        </form>
+      </section>
     </main>
   );
 }

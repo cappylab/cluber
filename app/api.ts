@@ -1,7 +1,13 @@
 export async function api(path: string, init?: RequestInit) {
   const res = await fetch(path, init);
   if (res.status === 401) { window.location.href = "/login"; throw new Error("unauthorized"); }
-  return res.json();
+  const text = await res.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: `${res.status} ${res.statusText}` };
+  }
 }
 
 export type Member = {
