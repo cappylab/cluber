@@ -229,9 +229,8 @@ export default function Dashboard() {
 
         <section className="hero-hud" aria-label="Cluber dashboard summary">
           <div className="hero-copy">
-            <div className="quest-badge"><Sparkles size={16} />{club?.name ?? "동호회 회비 퀘스트"}</div>
-            <h1>Cluber</h1>
-            <p>회원 등록, 납부, 랭킹을 한 화면에서 관리하는 게임형 동호회 대시보드</p>
+            <div className="quest-badge"><Sparkles size={16} />동호회 대시보드</div>
+            <h1>{club?.name ?? "Cluber"}</h1>
           </div>
 
           <div className="goal-card" id="fees">
@@ -360,8 +359,9 @@ export default function Dashboard() {
               ))}
               {members.length === 0 && (
                 <div className="empty-state">
-                  <Users size={28} />
-                  <span>등록된 회원이 없습니다.</span>
+                  <Image src="/assets/game/props/01-rocket.png" alt="" width={104} height={104} />
+                  <span>아직 회원이 없어요. 첫 회원을 추가해보세요!</span>
+                  <button className="game-btn primary" type="button" onClick={() => setAddOpen(true)}><UserPlus size={18} />회원 추가</button>
                 </div>
               )}
             </div>

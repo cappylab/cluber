@@ -77,8 +77,8 @@ export default function LogPage() {
             ))}
             {items.length === 0 && (
               <div className="empty-state">
-                <Coins size={28} />
-                <span>아직 납부 기록이 없습니다.</span>
+                <Image src="/assets/game/props/09-coin-stack.png" alt="" width={104} height={104} />
+                <span>아직 납부 기록이 없어요.</span>
               </div>
             )}
           </div>
