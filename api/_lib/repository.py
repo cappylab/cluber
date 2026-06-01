@@ -1,4 +1,5 @@
 from _domain.member import Member, Officer
+from _domain.club import Club
 
 
 def row_to_member(row):
@@ -43,4 +44,26 @@ class MemberRepository:
     def delete(self, name):
         with self.conn.cursor() as cur:
             cur.execute("DELETE FROM members WHERE name=%s", (name,))
+        self.conn.commit()
+
+
+
+class ClubRepository:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def get(self):
+        from psycopg.rows import dict_row
+        with self.conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("SELECT name, goal FROM club ORDER BY id LIMIT 1")
+            r = cur.fetchone()
+            return Club(r["name"], r["goal"]) if r else None
+
+    def save(self, name, goal):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO club (id, name, goal) VALUES (1, %s, %s)
+                   ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, goal=EXCLUDED.goal""",
+                (name, goal),
+            )
         self.conn.commit()
