@@ -12,6 +12,7 @@ import {
   CircleDollarSign,
   Coins,
   CreditCard,
+  Crown,
   Home,
   LogOut,
   Pencil,
@@ -154,6 +155,7 @@ export default function Dashboard() {
 
   const goal = club?.goal ?? monthlyGoal;
   const goalPercent = progress(stats?.total_fee ?? 0, goal);
+  const mvp = [...members].filter((m) => m.fee > 0).sort((a, b) => b.fee - a.fee)[0];
   const generalCount = stats?.roles?.["일반회원"] ?? 0;
   const officerCount = stats?.roles?.["운영진"] ?? 0;
 
@@ -366,19 +368,21 @@ export default function Dashboard() {
           </section>
 
           <aside className="side-stack">
-            <section className="reward-card" aria-label="클럽 보상">
-              <Image
-                className="reward-art"
-                src="/assets/game/cluber-reward-trophy.png"
-                alt=""
-                width={300}
-                height={200}
-                loading="eager"
-              />
-              <div>
-                <strong><BadgeCheck size={18} /> 보상 상자 진행 중</strong>
-                <span>목표 달성 시 클럽 활동비 리포트를 바로 확인할 수 있습니다.</span>
-              </div>
+            <section className="side-panel mvp-card" aria-label="이번 달 MVP">
+              <Image className="mvp-art" src="/assets/game/cluber-reward-trophy.png" alt="" width={300} height={200} loading="eager" />
+              <div className="side-title"><Crown size={21} /><h2>이번 달 MVP</h2></div>
+              {mvp ? (
+                <div className="mvp-body">
+                  <AnimalAvatar name={mvp.name} />
+                  <div className="mvp-info">
+                    <strong>{mvp.name}</strong>
+                    <small>{mvp.role}{mvp.position ? ` · ${mvp.position}` : ""}</small>
+                  </div>
+                  <b className="mvp-fee">{shortWon(mvp.fee)}</b>
+                </div>
+              ) : (
+                <div className="empty-mini">아직 납부한 회원이 없어요.<br />첫 MVP의 주인공은?</div>
+              )}
             </section>
           </aside>
         </div>

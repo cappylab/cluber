@@ -1660,3 +1660,51 @@ h2,
   font-weight: 900;
   font-family: var(--font-nunito), "Pretendard Variable", Pretendard, sans-serif;
 }
+
+
+.mvp-card {
+  text-align: center;
+}
+
+.mvp-art {
+  width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  margin: -10px auto 2px;
+  filter: drop-shadow(0 14px 14px rgba(112, 58, 0, 0.2));
+}
+
+.mvp-card .side-title {
+  justify-content: center;
+}
+
+.mvp-body {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mvp-info strong {
+  display: block;
+  color: var(--violet-deep);
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.mvp-info small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.mvp-fee {
+  color: var(--violet);
+  font-weight: 900;
+  font-size: 22px;
+  font-family: var(--font-nunito), "Pretendard Variable", Pretendard, sans-serif;
+}
+
+.mvp-card .empty-mini {
+  text-align: center;
+  line-height: 1.5;
+}
