@@ -1332,9 +1332,8 @@ h2,
     display: none;
   }
 
-  .stats-grid,
-  .side-stack {
-    grid-template-columns: 1fr;
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .member-head {
@@ -1356,8 +1355,26 @@ h2,
     align-items: stretch;
   }
 
-  .add-member-card {
-    grid-template-columns: 1fr;
+  .modal-actions .game-btn {
+    flex: 1;
+    padding-inline: 10px;
+  }
+
+  .hero-brand-mascot {
+    width: 104px;
+  }
+
+  .stat-tile {
+    min-height: 138px;
+    padding: 16px;
+  }
+
+  .setup-card {
+    padding: 26px 20px;
+  }
+
+  .game-modal {
+    padding: 20px;
   }
 }
 
