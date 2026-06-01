@@ -1,26 +1,38 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root{
+  --canvas:#F4F1FA; --fg:#332F3A; --muted:#635F69;
+  --violet:#7C3AED; --pink:#DB2777; --teal:#10B981; --amber:#F59E0B; --danger:#EF4444;
+  --grad:linear-gradient(135deg,#A78BFA,#7C3AED);
+  --r-card:28px; --r-btn:18px;
+  --sh-out:8px 8px 18px rgba(174,167,193,.55), -8px -8px 18px rgba(255,255,255,.9);
+  --sh-hover:11px 11px 24px rgba(174,167,193,.6), -11px -11px 24px rgba(255,255,255,.95);
+  --sh-sm:5px 5px 11px rgba(174,167,193,.5), -5px -5px 11px rgba(255,255,255,.9);
+  --sh-in:inset 5px 5px 10px rgba(174,167,193,.5), inset -5px -5px 10px rgba(255,255,255,.9);
+  --sh-in-deep:inset 10px 10px 20px rgba(174,167,193,.7), inset -10px -10px 20px rgba(255,255,255,.6);
+  --sh-clay:12px 12px 24px rgba(124,58,237,.30), -8px -8px 16px rgba(255,255,255,.85), inset 4px 4px 8px rgba(255,255,255,.45), inset -5px -5px 10px rgba(91,33,182,.18);
+  --sh-clay-pressed:inset 6px 6px 12px rgba(91,33,182,.30), inset -4px -4px 8px rgba(255,255,255,.25);
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+body{background:var(--canvas);color:var(--fg);font-family:"DM Sans","Pretendard Variable",Pretendard,system-ui,sans-serif;}
+.font-display{font-family:"Nunito","Pretendard Variable",Pretendard,sans-serif;}
+.clay-card{background:var(--canvas);border-radius:var(--r-card);box-shadow:var(--sh-out);}
+.well{box-shadow:var(--sh-in-deep);border-radius:18px;}
+.orb{border-radius:9999px;color:#fff;box-shadow:var(--sh-clay);display:grid;place-items:center;}
+.clay-btn{border-radius:var(--r-btn);background:var(--canvas);box-shadow:var(--sh-out);transition:all .2s ease-out;font-weight:700;cursor:pointer;border:0;color:var(--fg);}
+.clay-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-hover);}
+.clay-btn:active{transform:scale(.96);box-shadow:var(--sh-in);}
+.clay-btn-primary{background:var(--grad);color:#fff;box-shadow:var(--sh-clay);}
+.clay-btn-primary:active{transform:scale(.96);box-shadow:var(--sh-clay-pressed);}
+.clay-input{border-radius:var(--r-btn);background:var(--canvas);box-shadow:var(--sh-in-deep);outline:0;border:0;color:var(--fg);}
+.clay-input::placeholder{color:#8B7FA8;}
+.icon-btn{border-radius:14px;background:var(--canvas);box-shadow:var(--sh-in-deep);display:grid;place-items:center;transition:all .2s ease-out;cursor:pointer;border:0;color:var(--fg);}
+.icon-btn:hover{transform:translateY(-1px);box-shadow:var(--sh-out);}
+.icon-btn:active{transform:scale(.92);box-shadow:var(--sh-in-deep);}
+.icon-btn.danger{color:var(--danger);}
+.badge{border-radius:9999px;font-size:12px;font-weight:700;padding:6px 13px;color:#fff;display:inline-block;}
+.badge-officer{background:var(--grad);}
+.badge-general{background:var(--canvas);color:var(--muted);box-shadow:var(--sh-in);}
+.badge-paid{background:linear-gradient(135deg,#34D399,#10B981);}
+.badge-unpaid{background:linear-gradient(135deg,#FCD34D,#F59E0B);}
+*:focus-visible{outline:2px solid var(--violet);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;}}
