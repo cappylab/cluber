@@ -14,6 +14,7 @@ import {
   CreditCard,
   Home,
   LogOut,
+  Minus,
   Pencil,
   Plus,
   Search,
@@ -112,14 +113,13 @@ export default function Dashboard() {
     load(q);
   }
 
-  async function submitPayment(e: React.FormEvent) {
-    e.preventDefault();
+  async function applyPayment(sign: number) {
     if (!paymentTarget) return;
     const amount = Number(paymentAmount);
-    if (!Number.isFinite(amount) || amount < 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) return;
     const r = await api(`/api/members/${encodeURIComponent(paymentTarget.name)}/pay`, {
       method: "POST",
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({ amount: sign * amount }),
     });
     if (r.error) alert(r.error);
     setPaymentTarget(null);
@@ -374,13 +374,14 @@ export default function Dashboard() {
 
       {paymentTarget && (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="회비 납부">
-          <form className="game-modal" onSubmit={submitPayment}>
-            <h2>{paymentTarget.name} 회비 납부</h2>
-            <p>금액을 입력하면 실제 회원 회비에 누적됩니다.</p>
-            <input className="game-input" inputMode="numeric" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} aria-label="회비 납부 금액" />
+          <form className="game-modal" onSubmit={(e) => { e.preventDefault(); applyPayment(1); }}>
+            <h2>{paymentTarget.name} 회비</h2>
+            <p>금액 입력 후 납부(+) 또는 차감(−)을 누르세요.</p>
+            <input className="game-input" inputMode="numeric" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} aria-label="금액" />
             <div className="modal-actions">
               <button className="game-btn secondary" type="button" onClick={() => setPaymentTarget(null)}>취소</button>
-              <button className="game-btn primary" type="submit"><CreditCard size={18} />납부 저장</button>
+              <button className="game-btn danger-btn" type="button" onClick={() => applyPayment(-1)}><Minus size={18} />차감</button>
+              <button className="game-btn primary" type="submit"><CreditCard size={18} />납부</button>
             </div>
           </form>
         </div>

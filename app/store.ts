@@ -49,11 +49,11 @@ export function addMember(d: { name?: string; phone?: string; student_id?: strin
 }
 
 export function payFee(name: string, amount: number) {
-  if (!(amount >= 0)) return { error: "회비는 0원 이상이어야 합니다." };
+  if (!Number.isFinite(amount) || amount === 0) return { error: "금액을 입력하세요." };
   const ms = getMembers();
   const m = ms.find((x) => x.name === name);
   if (!m) return { error: "회원을 찾을 수 없습니다." };
-  m.fee += amount; m.paid = true; setMembers(ms);
+  m.fee = Math.max(0, m.fee + amount); m.paid = m.fee > 0; setMembers(ms);
   const ps = getPayments(); ps.push({ name, amount, date: new Date().toISOString() }); setPayments(ps);
   return { ok: true };
 }

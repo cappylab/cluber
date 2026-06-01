@@ -72,7 +72,7 @@ export default function LogPage() {
                   <strong>{p.name}</strong>
                   <small>{fmt(p.date)}</small>
                 </div>
-                <b>+{won(p.amount)}</b>
+                <b className={p.amount < 0 ? "log-minus" : ""}>{p.amount < 0 ? "−" : "+"}{won(Math.abs(p.amount))}</b>
               </div>
             ))}
             {items.length === 0 && (

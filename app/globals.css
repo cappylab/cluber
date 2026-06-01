@@ -1681,6 +1681,10 @@ h2,
   font-family: var(--font-nunito), "Pretendard Variable", Pretendard, sans-serif;
 }
 
+.log-row b.log-minus {
+  color: var(--danger);
+}
+
 
 .mvp-card {
   text-align: center;
