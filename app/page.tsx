@@ -9,7 +9,6 @@ import {
   BadgeCheck,
   Settings,
   CheckCircle2,
-  ChevronRight,
   CircleDollarSign,
   Coins,
   CreditCard,
@@ -367,24 +366,6 @@ export default function Dashboard() {
           </section>
 
           <aside className="side-stack">
-            <Link className="side-panel nav-card" href="/ranking">
-              <span className="nav-card-ico amber"><Trophy size={22} /></span>
-              <div>
-                <strong>회비 랭킹</strong>
-                <small>납부 금액 순위 전체 보기</small>
-              </div>
-              <ChevronRight size={20} />
-            </Link>
-
-            <Link className="side-panel nav-card" href="/log">
-              <span className="nav-card-ico sky"><Coins size={22} /></span>
-              <div>
-                <strong>납부 내역</strong>
-                <small>최근 납부 활동 일지</small>
-              </div>
-              <ChevronRight size={20} />
-            </Link>
-
             <section className="reward-card" aria-label="클럽 보상">
               <Image
                 className="reward-art"
