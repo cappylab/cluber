@@ -1,5 +1,6 @@
 import "./globals.css";
 import { DM_Sans, Nunito } from "next/font/google";
+import BottomNav from "./BottomNav";
 
 export const metadata = { title: "Cluber", description: "동호회 관리 프로그램" };
 
@@ -19,7 +20,7 @@ const nunito = Nunito({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${dmSans.variable} ${nunito.variable}`}>
-      <body>{children}</body>
+      <body>{children}<BottomNav /></body>
     </html>
   );
 }
