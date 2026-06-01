@@ -5,17 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Medal, Trophy } from "lucide-react";
 import { api, type Member } from "../api";
+import { assetBySeed, memberAnimalAvatars } from "../gameAssets";
 
 const shortWon = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
-const avatarPalettes = ["avatar-coral", "avatar-sky", "avatar-violet", "avatar-amber", "avatar-mint"];
 
-function avatarClass(name: string) {
-  const seed = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return avatarPalettes[seed % avatarPalettes.length];
-}
-
-function firstGlyph(name: string) {
-  return Array.from(name.trim())[0] || "C";
+function AnimalAvatar({ name }: { name: string }) {
+  const src = assetBySeed(memberAnimalAvatars, name);
+  return (
+    <span className="avatar animal-avatar">
+      <Image src={src} alt={`${name} avatar`} width={54} height={54} />
+    </span>
+  );
 }
 
 export default function Ranking() {
@@ -73,7 +73,7 @@ export default function Ranking() {
                 <span className={`rank-medal rank-${Math.min(i + 1, 3)}`}>
                   {i < 3 ? <Medal size={20} /> : i + 1}
                 </span>
-                <span className={`avatar ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                <AnimalAvatar name={m.name} />
                 <div>
                   <strong>{m.name}</strong>
                   <small>{m.role}{m.position ? ` · ${m.position}` : ""}</small>
