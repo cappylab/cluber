@@ -1,29 +1,28 @@
 from http.server import BaseHTTPRequestHandler
-import os, json, re
-import psycopg
+import os, json, ssl
+from urllib.parse import urlparse
 
 
-def trycon(url):
+def try_pg8000(url):
     try:
-        c = psycopg.connect(url, connect_timeout=8)
-        c.close()
+        import pg8000.dbapi
+        u = urlparse(url)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        c = pg8000.dbapi.connect(
+            user=u.username, password=u.password, host=u.hostname,
+            port=u.port or 5432, database=u.path.lstrip("/"), ssl_context=ctx,
+        )
+        cur = c.cursor(); cur.execute("SELECT 1"); cur.fetchone(); c.close()
         return "OK"
     except Exception as e:
-        return type(e).__name__ + ": " + str(e)[:120]
+        return type(e).__name__ + ": " + str(e)[:140]
 
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        base = os.environ.get("DATABASE_URL", "")
-        no_cb = re.sub(r"[?&]channel_binding=[^&]*", "", base)
-        sep_b = "&" if "?" in base else "?"
-        sep_n = "&" if "?" in no_cb else "?"
-        res = {
-            "as_is": trycon(base),
-            "no_cb": trycon(no_cb),
-            "gss": trycon(base + sep_b + "gssencmode=disable"),
-            "no_cb_gss": trycon(no_cb + sep_n + "gssencmode=disable"),
-        }
+        res = {"pg8000": try_pg8000(os.environ.get("DATABASE_URL", ""))}
         body = json.dumps(res).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
