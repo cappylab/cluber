@@ -26,7 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { api, type Member } from "./api";
-import { achievementBadges, assetBySeed, decorProps, memberAnimalAvatars } from "./gameAssets";
+import { assetBySeed, decorProps, memberAnimalAvatars } from "./gameAssets";
 
 type Stats = {
   count: number;
@@ -472,11 +472,6 @@ export default function Dashboard() {
                   <span className="asset-cell" key={src}>
                     <Image src={src} alt="" width={58} height={58} />
                   </span>
-                ))}
-              </div>
-              <div className="badge-strip">
-                {achievementBadges.map((src) => (
-                  <Image key={src} src={src} alt="" width={48} height={48} />
                 ))}
               </div>
             </section>
