@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -25,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { api, type Member } from "./api";
+import { achievementBadges, assetBySeed, decorProps, memberAnimalAvatars } from "./gameAssets";
 
 type Stats = {
   count: number;
@@ -37,29 +39,25 @@ type Stats = {
 const shortWon = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const monthlyGoal = 4_500_000;
 
-const avatarPalettes = [
-  "avatar-coral",
-  "avatar-sky",
-  "avatar-violet",
-  "avatar-amber",
-  "avatar-mint",
-];
-
-function avatarClass(name: string) {
-  const seed = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return avatarPalettes[seed % avatarPalettes.length];
-}
-
-function firstGlyph(name: string) {
-  return Array.from(name.trim())[0] || "C";
-}
-
 function progress(now: number, goal: number) {
+  if (!goal) return 0;
   return Math.min(100, Math.round((now / goal) * 100));
+}
+
+function AnimalAvatar({ name, size = "default" }: { name: string; size?: "default" | "small" | "tiny" }) {
+  const src = assetBySeed(memberAnimalAvatars, name);
+  const px = size === "tiny" ? 34 : size === "small" ? 44 : 54;
+  return (
+    <span className={`avatar animal-avatar ${size}`}>
+      <Image src={src} alt={`${name} avatar`} width={px} height={px} />
+    </span>
+  );
 }
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [club, setClub] = useState<{ name: string; goal: number } | null>(null);
+  const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [q, setQ] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -91,8 +89,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api("/api/stats"), api("/api/members?q=")]).then(([s, m]) => {
+    Promise.all([api("/api/stats"), api("/api/members?q="), api("/api/club")]).then(([s, m, c]) => {
       if (cancelled) return;
+      if (c && c.exists === false) { router.replace("/setup"); return; }
       if (s.error || m.error) {
         setLoadError(s.error || m.error);
         return;
@@ -100,13 +99,14 @@ export default function Dashboard() {
       setLoadError("");
       setStats(s);
       setMembers(m.members);
+      if (c && c.exists) setClub({ name: c.name, goal: c.goal });
     }).catch((error) => {
       if (!cancelled) setLoadError(error instanceof Error ? error.message : "API 연결 실패");
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -169,7 +169,8 @@ export default function Dashboard() {
     [members],
   );
 
-  const goalPercent = progress(stats?.total_fee ?? 0, monthlyGoal);
+  const goal = club?.goal ?? monthlyGoal;
+  const goalPercent = progress(stats?.total_fee ?? 0, goal);
   const generalCount = stats?.roles?.["일반회원"] ?? 0;
   const officerCount = stats?.roles?.["운영진"] ?? 0;
 
@@ -241,7 +242,7 @@ export default function Dashboard() {
 
         <section className="hero-hud" aria-label="Cluber dashboard summary">
           <div className="hero-copy">
-            <div className="quest-badge"><Sparkles size={16} />동호회 회비 퀘스트</div>
+            <div className="quest-badge"><Sparkles size={16} />{club?.name ?? "동호회 회비 퀘스트"}</div>
             <h1>Cluber</h1>
             <p>회원 등록, 납부, 랭킹을 한 화면에서 관리하는 게임형 동호회 대시보드</p>
           </div>
@@ -251,7 +252,7 @@ export default function Dashboard() {
               <span className="goal-icon"><CircleDollarSign size={24} /></span>
               <div>
                 <span>이번 달 목표</span>
-                <strong>{shortWon(monthlyGoal)}</strong>
+                <strong>{shortWon(goal)}</strong>
               </div>
               <b>{goalPercent}%</b>
             </div>
@@ -260,7 +261,7 @@ export default function Dashboard() {
             </div>
             <div className="goal-bottom">
               <span>현재 {shortWon(stats?.total_fee ?? 0)}</span>
-              <span>남은 {shortWon(Math.max(0, monthlyGoal - (stats?.total_fee ?? 0)))}</span>
+              <span>남은 {shortWon(Math.max(0, goal - (stats?.total_fee ?? 0)))}</span>
             </div>
           </div>
 
@@ -271,6 +272,8 @@ export default function Dashboard() {
               <span />
               <span />
             </div>
+            <Image className="floating-prop prop-rocket" src={decorProps[0]} alt="" width={76} height={76} />
+            <Image className="floating-prop prop-speaker" src={decorProps[2]} alt="" width={66} height={66} />
             <Image
               className="hero-mascot-img"
               src="/assets/game/cluber-mascot.png"
@@ -285,7 +288,9 @@ export default function Dashboard() {
         <section className="stats-grid" aria-label="클럽 통계">
           {statCards.map(({ img, label, value, helper, color, percent }) => (
             <article className="stat-tile" key={label}>
-              <div className={`stat-icon ${color}`}><img src={`/icons3d/${img}.png`} alt="" width={42} height={42} /></div>
+              <div className={`stat-icon ${color}`}>
+                <Image src={`/icons3d/${img}.png`} alt="" width={42} height={42} />
+              </div>
               <div className="stat-copy">
                 <span>{label}</span>
                 <strong>{value}</strong>
@@ -355,7 +360,7 @@ export default function Dashboard() {
               {members.map((m) => (
                 <article className="member-row" key={m.name}>
                   <div className="member-profile">
-                    <span className={`avatar ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <AnimalAvatar name={m.name} />
                     <div>
                       <strong>{m.name}</strong>
                       <small>{m.student_id || "-"} · {m.phone}</small>
@@ -405,7 +410,7 @@ export default function Dashboard() {
                     <span className={`rank-medal rank-${Math.min(i + 1, 3)}`}>
                       {i < 3 ? <Medal size={18} /> : i + 1}
                     </span>
-                    <span className={`avatar small ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <AnimalAvatar name={m.name} size="small" />
                     <div>
                       <strong>{m.name}</strong>
                       <small>{m.role}</small>
@@ -424,7 +429,7 @@ export default function Dashboard() {
               <div className="recent-list">
                 {recentPaid.length > 0 ? recentPaid.map((m) => (
                   <div className="recent-row" key={m.name}>
-                    <span className={`avatar tiny ${avatarClass(m.name)}`}>{firstGlyph(m.name)}</span>
+                    <AnimalAvatar name={m.name} size="tiny" />
                     <span>{m.name}</span>
                     <b>{shortWon(m.fee)}</b>
                   </div>
@@ -441,10 +446,37 @@ export default function Dashboard() {
                 alt=""
                 width={300}
                 height={200}
+                loading="eager"
               />
               <div>
                 <strong><BadgeCheck size={18} /> 보상 상자 진행 중</strong>
                 <span>목표 달성 시 클럽 활동비 리포트를 바로 확인할 수 있습니다.</span>
+              </div>
+            </section>
+
+            <section className="side-panel collection-panel">
+              <div className="side-title">
+                <Sparkles size={21} />
+                <h2>클럽 컬렉션</h2>
+              </div>
+              <div className="asset-grid avatar-collection">
+                {memberAnimalAvatars.map((src) => (
+                  <span className="asset-cell avatar-cell" key={src}>
+                    <Image src={src} alt="" width={58} height={58} />
+                  </span>
+                ))}
+              </div>
+              <div className="asset-grid">
+                {decorProps.map((src) => (
+                  <span className="asset-cell" key={src}>
+                    <Image src={src} alt="" width={58} height={58} />
+                  </span>
+                ))}
+              </div>
+              <div className="badge-strip">
+                {achievementBadges.map((src) => (
+                  <Image key={src} src={src} alt="" width={48} height={48} />
+                ))}
               </div>
             </section>
           </aside>

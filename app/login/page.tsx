@@ -18,8 +18,10 @@ export default function Login() {
       method: "POST",
       body: JSON.stringify({ username: u, password: p }),
     });
-    if (res.ok) router.push("/");
-    else setErr((await res.json()).error || "로그인 실패");
+    if (res.ok) {
+      const c = await fetch("/api/club").then((r) => (r.ok ? r.json() : null));
+      router.push(c && c.exists ? "/" : "/setup");
+    } else setErr((await res.json()).error || "로그인 실패");
   }
 
   return (
