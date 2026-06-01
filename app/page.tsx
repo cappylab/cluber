@@ -229,6 +229,7 @@ export default function Dashboard() {
             <a className="nav-pill" href="#members"><Users size={18} />회원</a>
             <a className="nav-pill" href="#fees"><CreditCard size={18} />회비</a>
             <Link className="nav-pill" href="/ranking"><Trophy size={18} />랭킹</Link>
+            <Link className="nav-pill" href="/badges"><BadgeCheck size={18} />배지</Link>
           </nav>
           <div className="player-actions">
             <button className="round-btn" type="button" aria-label="알림"><Bell size={18} /></button>

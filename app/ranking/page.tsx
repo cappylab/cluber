@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Medal, Trophy } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Medal, Trophy } from "lucide-react";
 import { api, type Member } from "../api";
 import { assetBySeed, memberAnimalAvatars } from "../gameAssets";
 
@@ -40,6 +40,7 @@ export default function Ranking() {
           <nav className="nav-tabs" aria-label="주요 메뉴">
             <Link className="nav-pill" href="/"><ArrowLeft size={18} />홈</Link>
             <Link className="nav-pill active" href="/ranking"><Trophy size={18} />랭킹</Link>
+            <Link className="nav-pill" href="/badges"><BadgeCheck size={18} />배지</Link>
           </nav>
           <div />
         </header>
