@@ -285,7 +285,7 @@ export default function Dashboard() {
         <section className="stats-grid" aria-label="클럽 통계">
           {statCards.map(({ img, label, value, helper, color, percent }) => (
             <article className="stat-tile" key={label}>
-              <div className={`stat-icon ${color}`}><img src={`/icons3d/${img}.png`} alt="" width={36} height={36} /></div>
+              <div className={`stat-icon ${color}`}><img src={`/icons3d/${img}.png`} alt="" width={42} height={42} /></div>
               <div className="stat-copy">
                 <span>{label}</span>
                 <strong>{value}</strong>
