@@ -16,7 +16,6 @@ import {
   Home,
   LogOut,
   Pencil,
-  Plus,
   Search,
   Sparkles,
   Trash2,
@@ -61,13 +60,6 @@ export default function Dashboard() {
   const [members, setMembers] = useState<Member[]>([]);
   const [q, setQ] = useState("");
   const [loadError, setLoadError] = useState("");
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    student_id: "",
-    type: "member",
-    position: "",
-  });
   const [paymentTarget, setPaymentTarget] = useState<Member | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("150000");
   const [editTarget, setEditTarget] = useState<Member | null>(null);
@@ -108,18 +100,6 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [router]);
-
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name || !form.phone) return;
-    const r = await api("/api/members", {
-      method: "POST",
-      body: JSON.stringify(form),
-    });
-    if (r.error) return alert(r.error);
-    setForm({ name: "", phone: "", student_id: "", type: "member", position: "" });
-    load(q);
-  }
 
   async function submitPayment(e: React.FormEvent) {
     e.preventDefault();
@@ -299,9 +279,9 @@ export default function Dashboard() {
             <div className="panel-heading">
               <div>
                 <h2>회원 관리</h2>
-                <p>검색, 신규 등록, 납부 처리까지 실제 API로 연결됩니다.</p>
+                <p>회원을 검색하고 납부를 처리하세요.</p>
               </div>
-              <Link className="ghost-link" href="/ranking">회비 랭킹 <ChevronRight size={16} /></Link>
+              <Link className="game-btn primary" href="/add"><UserPlus size={18} />회원 추가</Link>
             </div>
 
             {loadError && (
@@ -322,24 +302,6 @@ export default function Dashboard() {
                 />
               </div>
               <button className="game-btn secondary" type="submit">검색</button>
-            </form>
-
-            <form onSubmit={add} className="add-member-card">
-              <div className="add-card-title">
-                <span><UserPlus size={19} /></span>
-                <strong>회원 추가</strong>
-              </div>
-              <input className="game-input" placeholder="이름" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="이름" />
-              <input className="game-input" placeholder="연락처" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} aria-label="연락처" />
-              <input className="game-input" placeholder="학번(선택)" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })} aria-label="학번" />
-              <select className="game-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} aria-label="구분">
-                <option value="member">일반회원</option>
-                <option value="officer">운영진</option>
-              </select>
-              {form.type === "officer" && (
-                <input className="game-input" placeholder="직책" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} aria-label="직책" />
-              )}
-              <button className="game-btn primary" type="submit"><Plus size={18} />회원 추가</button>
             </form>
 
             <div className="member-board">
