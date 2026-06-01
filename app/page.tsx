@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +15,6 @@ import {
   CreditCard,
   Home,
   LogOut,
-  Medal,
   Pencil,
   Plus,
   Search,
@@ -161,16 +160,6 @@ export default function Dashboard() {
     window.location.href = "/login";
   }
 
-  const ranking = useMemo(
-    () => [...members].sort((a, b) => b.fee - a.fee).slice(0, 5),
-    [members],
-  );
-
-  const recentPaid = useMemo(
-    () => members.filter((m) => m.paid).slice(-5).reverse(),
-    [members],
-  );
-
   const goal = club?.goal ?? monthlyGoal;
   const goalPercent = progress(stats?.total_fee ?? 0, goal);
   const generalCount = stats?.roles?.["일반회원"] ?? 0;
@@ -232,6 +221,7 @@ export default function Dashboard() {
             <a className="nav-pill" href="#fees"><CreditCard size={18} />회비</a>
             <Link className="nav-pill" href="/ranking"><Trophy size={18} />랭킹</Link>
             <Link className="nav-pill" href="/badges"><BadgeCheck size={18} />배지</Link>
+            <Link className="nav-pill" href="/log"><Coins size={18} />내역</Link>
           </nav>
           <div className="player-actions">
             <Link className="round-btn" href="/settings" aria-label="설정"><Settings size={18} /></Link>
@@ -402,45 +392,23 @@ export default function Dashboard() {
           </section>
 
           <aside className="side-stack">
-            <section className="side-panel ranking-panel">
-              <div className="side-title">
-                <Trophy size={21} />
-                <h2>회비 랭킹</h2>
+            <Link className="side-panel nav-card" href="/ranking">
+              <span className="nav-card-ico amber"><Trophy size={22} /></span>
+              <div>
+                <strong>회비 랭킹</strong>
+                <small>납부 금액 순위 전체 보기</small>
               </div>
-              <div className="rank-list">
-                {ranking.map((m, i) => (
-                  <div className="rank-row" key={m.name}>
-                    <span className={`rank-medal rank-${Math.min(i + 1, 3)}`}>
-                      {i < 3 ? <Medal size={18} /> : i + 1}
-                    </span>
-                    <AnimalAvatar name={m.name} size="small" />
-                    <div>
-                      <strong>{m.name}</strong>
-                      <small>{m.role}</small>
-                    </div>
-                    <b>{shortWon(m.fee)}</b>
-                  </div>
-                ))}
-              </div>
-            </section>
+              <ChevronRight size={20} />
+            </Link>
 
-            <section className="side-panel">
-              <div className="side-title">
-                <Coins size={21} />
-                <h2>최근 납부</h2>
+            <Link className="side-panel nav-card" href="/log">
+              <span className="nav-card-ico sky"><Coins size={22} /></span>
+              <div>
+                <strong>납부 내역</strong>
+                <small>최근 납부 활동 일지</small>
               </div>
-              <div className="recent-list">
-                {recentPaid.length > 0 ? recentPaid.map((m) => (
-                  <div className="recent-row" key={m.name}>
-                    <AnimalAvatar name={m.name} size="tiny" />
-                    <span>{m.name}</span>
-                    <b>{shortWon(m.fee)}</b>
-                  </div>
-                )) : (
-                  <div className="empty-mini">아직 납부 기록이 없습니다.</div>
-                )}
-              </div>
-            </section>
+              <ChevronRight size={20} />
+            </Link>
 
             <section className="reward-card" aria-label="클럽 보상">
               <Image

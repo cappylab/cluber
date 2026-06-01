@@ -6,6 +6,7 @@ export type Club = { name: string; goal: number };
 
 const MKEY = "cluber.members";
 const CKEY = "cluber.club";
+const PKEY = "cluber.payments";
 const AKEY = "cluber.auth";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -53,6 +54,7 @@ export function payFee(name: string, amount: number) {
   const m = ms.find((x) => x.name === name);
   if (!m) return { error: "회원을 찾을 수 없습니다." };
   m.fee += amount; m.paid = true; setMembers(ms);
+  const ps = getPayments(); ps.push({ name, amount, date: new Date().toISOString() }); setPayments(ps);
   return { ok: true };
 }
 
@@ -69,10 +71,14 @@ export function deleteMember(name: string) {
   return { ok: true };
 }
 
+export type Payment = { name: string; amount: number; date: string };
+export function getPayments(): Payment[] { return read<Payment[]>(PKEY, []); }
+function setPayments(ps: Payment[]) { write(PKEY, ps); }
+
 export function getClub(): Club | null { return read<Club | null>(CKEY, null); }
 export function saveClub(name: string, goal: number) { write(CKEY, { name: name.trim(), goal }); return { ok: true }; }
 
 export function isAuthed(): boolean { return read<string>(AKEY, "") === "1"; }
 export function login() { write(AKEY, "1"); }
 export function logout() { if (typeof window !== "undefined") localStorage.removeItem(AKEY); }
-export function clearData() { if (typeof window !== "undefined") { localStorage.removeItem(MKEY); localStorage.removeItem(CKEY); } }
+export function clearData() { if (typeof window !== "undefined") { localStorage.removeItem(MKEY); localStorage.removeItem(CKEY); localStorage.removeItem(PKEY); } }

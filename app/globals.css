@@ -1594,3 +1594,69 @@ h2,
   background: linear-gradient(180deg, #ff7a7a, #e23b5e);
   box-shadow: var(--pop-shadow);
 }
+
+
+.nav-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  transition: transform 170ms ease, box-shadow 170ms ease;
+}
+
+.nav-card:hover {
+  transform: translateY(-2px);
+}
+
+.nav-card > div {
+  margin-right: auto;
+}
+
+.nav-card strong {
+  display: block;
+  color: var(--violet-deep);
+  font-weight: 900;
+}
+
+.nav-card small {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.nav-card-ico {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: var(--pop-shadow);
+}
+
+.nav-card-ico.amber { background: linear-gradient(180deg, #ffd85d, #ff8d24); }
+.nav-card-ico.sky { background: linear-gradient(180deg, #73b5ff, #286ce0); }
+.nav-card > svg { color: var(--muted); }
+
+.log-list {
+  display: grid;
+  gap: 10px;
+}
+
+.log-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 8px 16px rgba(70, 50, 135, 0.08);
+}
+
+.log-row > div { margin-right: auto; }
+.log-row strong { display: block; color: var(--ink); font-weight: 900; }
+.log-row small { color: var(--muted); font-weight: 700; font-size: 12px; }
+.log-row b {
+  color: var(--teal);
+  font-weight: 900;
+  font-family: var(--font-nunito), "Pretendard Variable", Pretendard, sans-serif;
+}
